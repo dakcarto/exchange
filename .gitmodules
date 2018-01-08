@@ -8,3 +8,6 @@
 [submodule "vendor/sphinx-theme"]
 	path = vendor/sphinx-theme
 	url = https://github.com/boundlessgeo/sphinx-theme
+[submodule "vendor/castling"]
+	path = vendor/castling
+	url = git@github.com:boundlessgeo/castling.git
