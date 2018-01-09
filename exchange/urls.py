@@ -28,6 +28,7 @@ from thumbnails.urls import urlpatterns as thumbnail_urls
 from geonode.urls import urlpatterns as geonode_urls
 from . import views
 from storyscapes.urls import urlpatterns as story_urls
+from castling.urls import urlpatterns as castling_urls
 
 js_info_dict = {
     'packages': ('geonode.layers',),
@@ -114,3 +115,6 @@ urlpatterns += geonode_urls
 urlpatterns += maploom_urls
 urlpatterns += fileservice_urls
 urlpatterns += thumbnail_urls
+
+if settings.CASTLING_ENABLED:
+	urlpatterns += castling_urls

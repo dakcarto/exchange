@@ -627,3 +627,9 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = ''
+
+CASTLING_ENABLED = str2bool(os.getenv('CASTLING_ENABLED', 'True'))
+if CASTLING_ENABLED:
+    INSTALLED_APPS = INSTALLED_APPS + (
+        'exchange.castling',
+    )
