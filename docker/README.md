@@ -25,9 +25,10 @@ not work as that value. To bypass this the nginx service alias `nginx` is used. 
 resolve as localhost.
 
 #### Clone Repo
-There are two submodules in the vendor directory
+There are three submodules in the vendor directory
 - geonode
 - maploom
+- sphinx-theme (used for documentation)
 
 Run the following command to clone all repositories
 
@@ -111,11 +112,10 @@ Docker reads from two areas for settings in this environment.
 2. docker-compose:environment:
 
 The first one id where you may need to make adjustments. The second should not require any changes. The only
-containers that utilize the `.env` file are exchange, registry and worker.
+containers that utilize the `.env` file are exchange and registry.
 
-**Note:** In the `.env` file you will see a `DEV=1` entry. The exchange/worker Dockerfile will install geonode from 
-the vendor/geonode submodule if it has any value. Placing a `DEV=` will install geonode from the 
-`requirements.txt` entry.
+**Note:** In the `.env` file you will see a `DEV=True` entry. Placing a `DEV=False` will run django using 
+waitress and setting `DEBUG = False`.
 
 #### Running Tests and Coverage
 ```bash
@@ -141,3 +141,17 @@ If you have any questions feel free to reach out in the following `Boundless` sl
 
 - `#exchange-dev` Exchange Development Team
 - `#qa-deployment` Exhange QA/Deployment (CI)
+
+#### Makefile
+Easy commands to get started
+
+```bash
+Boundless:exchange bex$ make
+  make lint     - run to lint (style check) repo
+  make html     - build sphinx documentation
+  make start    - start containers
+  make stop     - stop containers
+  make purge    - stop containers and prune volumes
+  make recreate - stop containers, prune volumes and recreate/build containers
+  make test     - run unit tests
+```

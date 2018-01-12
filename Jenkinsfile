@@ -35,7 +35,6 @@ node {
 
       stage('Exchange-Healthcheck'){
         sh """
-          sleep 120
           /bin/bash -c ". docker/devops/helper.sh && exchange-healthcheck"
           """
       }
@@ -103,5 +102,5 @@ def notifyBuild(String buildStatus = currentBuild.result) {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary)
+  slackSend (color: colorCode, message: summary, channel: '#exchange-bots')
 }

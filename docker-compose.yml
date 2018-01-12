@@ -19,6 +19,8 @@ services:
     container_name: exchange
     env_file: .env
     image: bex/exchange:latest
+    build:
+      context: .
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:8000 || exit 1"]
       interval: 15s
@@ -30,28 +32,9 @@ services:
       - db
       - registry
       - search
-      - worker
-    volumes:
-      - $PWD:/code:rw  # needed for running tests and coverage
-      - django_media:/app/data/media
-  worker:
-    container_name: worker
-    env_file: .env
-    image: bex/exchange:latest
-    build:
-      context: .
-      args:
-        dev: $DEV
-    environment:
-      TASK: 'worker'
-    healthcheck:
-      test: ["CMD-SHELL", "cd /code && celery inspect ping -A exchange.celery_app || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-    depends_on:
       - task_queue
     volumes:
+      - $PWD:/code:rw  # needed for running tests and coverage
       - django_media:/app/data/media
   registry:
     container_name: registry

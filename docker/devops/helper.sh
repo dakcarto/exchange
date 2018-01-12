@@ -30,13 +30,10 @@ function sonar-scan {
               -Dsonar.python.pylint=/usr/bin/pylint
 }
 
-# function to get exchange healthcheck
+# Jenkins function for exchange healthcheck
 function exchange-healthcheck {
-    if [[ $(docker inspect --format '{{ .State.Health.Status }}' exchange) = healthy ]]; then
-        echo "exchange is healthy"
-    else
-        echo "exchange is not healthy, attempting to get logs"
-        docker-compose logs exchange
-        exit 1
-    fi
+    for i in $(seq 1 20);
+        do echo $(docker inspect --format '{{ .State.Health.Status }}' exchange) | grep -w healthy && s=0 && break || \
+           s=$? && echo "exchange is not ready, trying again in 30 seconds" && sleep 30;
+    done; (exit $s)
 }
