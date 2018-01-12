@@ -29,6 +29,9 @@ $manage migrate --noinput
 $manage collectstatic --noinput
 $manage loaddata default_users
 $manage loaddata base_resources
+if [[ $DEV == True ]]; then
+  $manage importservice http://data-test.boundlessgeo.io/geoserver/wms bcs-hosted-data WMS I
+fi
 $manage loaddata /code/docker/exchange/docker_oauth_apps.json
 $manage rebuild_index
 pip freeze
