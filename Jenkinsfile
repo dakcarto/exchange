@@ -35,7 +35,6 @@ node {
 
       stage('Exchange-Healthcheck'){
         sh """
-          sleep 120
           /bin/bash -c ". docker/devops/helper.sh && exchange-healthcheck"
           """
       }
