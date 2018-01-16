@@ -656,8 +656,6 @@ def publish_service(request, pk):
     return redirect('services')
 
 
-#@receiver(pre_delete, sender=Service,
-#          dispatch_uid='remove_record_from_registry')
 def remove_record_from_csw(sender, instance, using, **kwargs):
     """
     Delete all csw records associated with the service. We only
@@ -670,7 +668,6 @@ def remove_record_from_csw(sender, instance, using, **kwargs):
         delete_record(instance.uuid)
 
 
-#@receiver(post_save, sender=Service)
 def service_post_save(sender, **kwargs):
     """
     Assign CSW Manager permissions for all newly created Service instances.
