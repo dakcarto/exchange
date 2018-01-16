@@ -316,13 +316,23 @@
     <li class="list-group-item">
     <form>
       <div class="input-group">
+          {% if resource.storeType != "remoteStore" %}
         <input type="text" class="form-control" readonly
           value="{{ GEOSERVER_BASE_URL }}{{ resource.workspace }}/{{ resource.layer.name  }}/ows?service=wms&version=1.3.0&request=GetCapabilities" id="copy-input">
+          {% else %}
+          {% if resource.service.type == 'REST' %}
+          <input type="text" class="form-control" readonly
+          value="{{ resource.service.base_url}}/{{resource.alternate}}" id="copy-input">
+          {% else %}
+           <input type="text" class="form-control" readonly
+          value="{{ resource.service.base_url}}" id="copy-input">
+          {% endif %}
+          {% endif %}
         <span class="input-group-btn">
           <button class="btn btn-primary" type="button" id="copy-button"
               data-toggle="tooltip" data-placement="button"
               title="Copy to Clipboard">
-            Copy WMS URL
+            Copy Source URL
           </button>
         </span>
       </div>
@@ -335,9 +345,11 @@
     </li>
 
     {% if "change_resourcebase_metadata" in perms_list or "change_resourcebase" in perms_list or "delete_resourcebase" in perms_list or "change_layer_style" in layer_perms %}
+    {% if resource.storeType != "remoteStore" %}
     <li class="list-group-item">
       <button class="btn btn-primary btn-md btn-block" data-toggle="modal" data-target="#edit-layer">{% trans "Edit Layer" %}</button>
     </li>
+    {% endif %}
     <div class="modal fade" id="edit-layer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
