@@ -68,7 +68,7 @@
               <ul class="dataset-resources list-inline">
                 <li><a href="{{ item.detail_url }}"><i class="fa fa-info-circle"></i>View Details</a></li>
                 <li ng-repeat="x in item.references">
-                  <a data-toggle="tooltip" data-placement="top" tooltip title="Copy to Clipboard" ngclipboard ngclipboard-success="onCopySuccess(e);" ngclipboard-error="onCopyError(e);" data-clipboard-text="{{ x.url }}"  class="label copy-button" data-format="{{ x.type | friendlyScheme | lowercase }}" target="_remote">{{ x.type | friendlyScheme }}</a>
+                  <a data-toggle="tooltip" data-placement="top" tooltip title="Copy to Clipboard" ngclipboard ngclipboard-success="onCopySuccess(e);" ngclipboard-error="onCopyError(e);" data-clipboard-text="{{ x.url }}"  class="label copy-button" data-format="{{ x.scheme | friendlyScheme | lowercase }}" target="_remote">{{ x.scheme | friendlyScheme }}</a>
                 </li>
               </ul>
             </div>
