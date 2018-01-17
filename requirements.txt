@@ -2,11 +2,11 @@
 
 git+https://github.com/MapStory/composer.git@master#composer
 git+https://github.com/boundlessgeo/django-exchange-maploom.git@master#django-exchange-maploom
-git+https://github.com/boundlessgeo/geonode@elasticsearch-6.x-compat#egg=geonode
+git+https://github.com/boundlessgeo/geonode@exchange/1.4.x#egg=geonode
 git+https://github.com/GeoNode/django-osgeo-importer@angular-1.6#egg=django-osgeo-importer
 git+https://github.com/boundlessgeo/sphinx@bex#egg=Sphinx
 git+https://github.com/venicegeo/nearsight@master#egg=nearsight
-git+https://github.com/boundlessgeo/geonode-elasticsearch.git@elasticsearch-6.x-compat
+geonode-elasticsearch-app==0.2.0
 django-jsonfield==1.0.1
 django-jsonfield-compat==0.4.4
 numpy==1.13.3
