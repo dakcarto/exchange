@@ -52,6 +52,22 @@ var createMapThumbnail = function() {
     return true;
 }
 
+var createDocumentThumbnail = function() {
+    var url = getThumbnailPathFromUrl();
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: 'refresh',
+        success: function(data, status, jqXHR) {
+            refreshThumbnail();
+            return true;
+        }
+    });
+    return true;
+}
+
+
 var uploadThumbnail = function(inputId) {
     var url = getThumbnailPathFromUrl();
 

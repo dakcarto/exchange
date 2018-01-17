@@ -666,7 +666,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
 class ViewFunctionTests(ViewTestCase):
 
     def test_get_unified_search_result_objects(self):
-        from exchange.views import get_unified_search_result_objects
+        from exchange.search.views import get_unified_search_result_objects
 
         test_hits = [{
             '_index': 'registry',

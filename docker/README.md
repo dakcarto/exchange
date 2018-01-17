@@ -5,7 +5,7 @@
 - Docker API 1.25+ (`docker version`)
 - Git
 
-Note: You will also need to append nginx to your 127.0.0.1 entry in `/etc/hosts`.
+**Note:** You will also need to append nginx to your 127.0.0.1 entry in `/etc/hosts`.
 
 ```bash
 ##
@@ -21,8 +21,15 @@ Note: You will also need to append nginx to your 127.0.0.1 entry in `/etc/hosts`
 
 The reason for this is due to osgeo_importer. It uses gsconfig which parses `workspace_style_url` from geoserver rest 
 xml atom:link, which uses the entry from global.xml. Since each application is in separate containers, localhost will 
-not work as that value. To bypass this the nginx service alias `nginx` is used. If added to youe `/etc/hosts` it will 
+not work as that value. To bypass this the nginx service alias `nginx` is used. If added to your `/etc/hosts` it will 
 resolve as localhost.
+
+
+**Note:** You will most likely have to set `vm.max_map_count` on your host/mac for the elasticsearch container to not fail. 
+See [elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode) for details.  
+The reason for this is starting with elasticsearch 5, multiple system tests were added to ensure indexes don't get corrupted.
+Skipping those tests might be possible when elasticsearch listens to localhost only.
+ 
 
 #### Clone Repo
 There are three submodules in the vendor directory

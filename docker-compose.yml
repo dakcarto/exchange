@@ -99,7 +99,20 @@ services:
       - search_data:/var/lib/rabbitmq
   search:
     container_name: search
-    image: elasticsearch:2.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.1.1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      core:
+        soft: -1
+        hard: -1
+      fsize:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - "9200:9200"
     healthcheck:

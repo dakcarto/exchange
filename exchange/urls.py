@@ -85,19 +85,19 @@ if 'nearsight' in settings.INSTALLED_APPS:
 # use combined registry/geonode elastic search rather than geonode search
 if settings.ES_SEARCH:
     urlpatterns += [url(r'^api/(?P<resourcetype>base)/search/$',
-                        views.elastic_search,
+                        'exchange.search.views.elastic_search',
                         name='elastic_search')]
     urlpatterns += [url(r'^api/(?P<resourcetype>documents)/search/$',
-                        views.elastic_search,
+                        'exchange.search.views.elastic_search',
                         name='elastic_search')]
     urlpatterns += [url(r'^api/(?P<resourcetype>layers)/search/$',
-                        views.elastic_search,
+                        'exchange.search.views.elastic_search',
                         name='elastic_search')]
     urlpatterns += [url(r'^api/(?P<resourcetype>maps)/search/$',
-                        views.elastic_search,
+                        'exchange.search.views.elastic_search',
                         name='elastic_search')]
     urlpatterns += [url(r'^api/(?P<resourcetype>registry)/search/$',
-                        views.elastic_search,
+                        'exchange.search.views.elastic_search',
                         name='elastic_search')]
     urlpatterns += [url(r'^autocomplete',
                         views.empty_page,
