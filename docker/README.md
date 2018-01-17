@@ -25,12 +25,24 @@ not work as that value. To bypass this the nginx service alias `nginx` is used. 
 resolve as localhost.
 
 
-**Note:** You will most likely have to set `vm.max_map_count` on your host/mac for the elasticsearch container to not fail. 
-See [elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode) for details.  
-The reason for this is starting with elasticsearch 5, multiple system tests were added to ensure indexes don't get corrupted.
-Skipping those tests might be possible when elasticsearch listens to localhost only.
- 
+**Note:** You will have to set `vm.max_map_count` on your host for the elasticsearch container to not 
+fail  ([elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode)).  
+On MacOS you will need to ensure that the docker process is running and then do the following:
 
+```bash
+screen ~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/tty
+# press any key to show prompt in tty session
+sysctl -w vm.max_map_count=262144
+# in the terminal press Ctrl-a + k <-- this will kill the window
+# select y to the prompt "Really kill this window [y/n]"
+```
+
+for Linux do the following:
+
+```bash
+sudo sysctl -w vm.max_map_count=262144
+```
+ 
 #### Clone Repo
 There are three submodules in the vendor directory
 - geonode
@@ -49,7 +61,7 @@ To ensure the latest version/commits are being used in all the submodules, run:
 
 ```bash
 cd exchange
-git submodule update --remote --recursive
+git submodule update --init --remote --recursive
 ```
 
 when working off a different branch on one of the submodule, you may have to specify the specific branch to follow.  
