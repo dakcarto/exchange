@@ -184,6 +184,20 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         from geonode.maps.models import Map
         from geonode.base.models import TopicCategory, Region
 
+        # Don't test the remote service we import on container creation
+        from geonode.services.views import remove_service
+        from geonode.services.models import Service
+        from django.shortcuts import get_object_or_404, Http404
+
+        try:
+            service = get_object_or_404(Service, pk=1)
+        except Http404:
+            service = None
+
+        if service:
+            service.layer_set.all().delete()
+            service.delete()
+
         # Layer
         # TODO: Upload fails sometimes especially with raster
         files = ['./relief_san_andres.tif', './boxes_with_end_date.zip']
