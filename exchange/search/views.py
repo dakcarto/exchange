@@ -100,11 +100,12 @@ def get_facet_settings():
     default_facet_settings = {'open': False, 'show': True}
     facet_settings = {
         'category': {'open': True, 'show': True},
-        'source_host': {'open': False, 'display': 'Host'},
-        'owner__username': {'open': False, 'display': 'Owner'},
+        'source_host': {'open': True, 'display': 'Host'},
+        'owner__username': {'open': True, 'display': 'Owner'},
         'type': {'open': True, 'display': 'Type'},
         'subtype': {'open': True, 'display': 'Data Type'},
-        'keywords': {'show': True}
+        'keywords': {'show': True},
+        'references.scheme': {'show': True, 'display': 'Service Type'}
     }
 
     if additional_facets:
@@ -155,7 +156,8 @@ def get_facet_fields():
         'owner__username',
         'keywords',
         'category',
-        'source_host'
+        'source_host',
+        'references.scheme'
     ]
 
     if additional_facets:
@@ -246,7 +248,9 @@ def get_main_query(search, query):
         'title.english',
         'typename',
         'type.text',
-        'type.english'
+        'type.english',
+        'references.scheme.text',
+        'references.scheme.pattern'
     ]
 
     # Build main query to search in fields[]
