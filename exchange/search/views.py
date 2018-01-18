@@ -385,9 +385,9 @@ def apply_sort(search, sort):
             }}
         )
     elif sort.lower() == "title":
-        search = search.sort('title')
+        search = search.sort('title_sortable')
     elif sort.lower() == "-title":
-        search = search.sort('-title')
+        search = search.sort('-title_sortable')
     elif sort.lower() == "-popular_count":
         search = search.sort('-popular_count')
     else:
