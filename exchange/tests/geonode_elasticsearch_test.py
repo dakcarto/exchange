@@ -121,7 +121,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "keyword"
             },
             "type": {
                 "fields": {
@@ -272,7 +272,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "keyword"
             },
             "type": {
                 "fields": {
@@ -439,7 +439,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "keyword"
             },
             "supplemental_information": {
                 "type": "text"
@@ -644,7 +644,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "keyword"
             },
             "type": {
                 "fields": {
@@ -807,7 +807,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "keyword"
             },
             "type": {
                 "fields": {
