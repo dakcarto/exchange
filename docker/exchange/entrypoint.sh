@@ -19,11 +19,6 @@ until $manage migrate account --noinput; do
   >&2 echo "db is unavailable - sleeping"
   sleep 5
 done
-# todo: remove this when registry is removed
-until curl -XPUT "registry:8001/catalog/registry/csw"; do
-  >&2 echo "registry is unavailable - sleeping"
-  sleep 5
-done
 $setup build_sphinx
 $manage migrate --noinput
 $manage collectstatic --noinput
