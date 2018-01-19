@@ -37,11 +37,11 @@
         {% endverbatim %}
     </li>
     <label>{% trans "Date begins after:" %}</label>
-    <li><input value="yyyy-mm-dd" data-date-format="YYYY-MM-DD" type="text" class="datepicker" placeholder="{% trans 'yyyy-mm-dd' %}" ng-model="date_query.date__gte" /></li>
+    <li><input value="yyyy-mm-dd" data-date-usecurrent="false" data-date-format="YYYY-MM-DD" type="text" class="datepicker" placeholder="{% trans 'yyyy-mm-dd' %}" ng-model="date_query.date__gte" /></li>
   </ul>
   <ul class="nav closed" id="date_end">
     <label>{% trans "Date ends before:" %}</label>
-    <li><input value="yyyy-mm-dd" data-date-format="YYYY-MM-DD" type="text" class="datepicker" placeholder="{% trans 'yyyy-mm-dd' %}" ng-model="date_query.date__lte" /></li>
+    <li><input value="yyyy-mm-dd" data-date-usecurrent="false" data-date-format="YYYY-MM-DD" type="text" class="datepicker" placeholder="{% trans 'yyyy-mm-dd' %}" ng-model="date_query.date__lte" /></li>
   </ul>
 </nav>
 {% endif %}
