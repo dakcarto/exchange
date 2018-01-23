@@ -12,6 +12,7 @@ help:
 	@echo "  make purge    - stop containers and prune volumes"
 	@echo "  make recreate - stop containers, prune volumes and recreate/build containers"
 	@echo "  make test     - run unit tests"
+	@echo "  make maploom  - build maploom"
 
 html:
 	@docker run -v $(current_dir):/code \

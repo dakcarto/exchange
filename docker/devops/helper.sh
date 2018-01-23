@@ -58,11 +58,21 @@ function build-maploom {
     echo '{% load staticfiles i18n %}{% verbatim %}' > bin/_maploom_map.html
     cat bin/index_body_no_tag.html >> bin/_maploom_map.html
     echo '{% endverbatim %}' >> bin/_maploom_map.html
-    mv bin/_maploom_js.html /code/exchange/maploom/templates/maploom/_maploom_js.html
-    mv bin/_maploom_map.html /code/exchange/maploom/templates/maploom/_maploom_map.html
-    mv bin/maploom.html /code/exchange/maploom/templates/maps/maploom.html
-    mv bin/assets/* /code/exchange/maploom/static/maploom/assets/
-    mv bin/fonts/* /code/exchange/maploom/static/maploom/fonts/
-    rm -fr bin build package-lock.json
+    if [[ -f /code/exchange/maploom/templates/maploom/_maploom_js.html ]]; then
+      rm /code/exchange/maploom/templates/maploom/_maploom_js.html
+    fi
+    cp bin/_maploom_js.html /code/exchange/maploom/templates/maploom/_maploom_js.html
+    if [[ -f /code/exchange/maploom/templates/maploom/_maploom_map.html ]]; then
+      rm /code/exchange/maploom/templates/maploom/_maploom_map.html
+    fi
+    cp bin/_maploom_map.html /code/exchange/maploom/templates/maploom/_maploom_map.html
+    if [[ -f /code/exchange/maploom/templates/maps/maploom.html ]]; then
+      rm /code/exchange/maploom/templates/maps/maploom.html
+    fi
+    cp bin/maploom.html /code/exchange/maploom/templates/maps/maploom.html
+    rm -fr /code/exchange/maploom/static/maploom/{assets,fonts}
+    cp -r bin/assets /code/exchange/maploom/static/maploom/assets
+    cp -r bin/fonts /code/exchange/maploom/static/maploom/fonts
+    rm -f package-lock.json
     popd
 }
