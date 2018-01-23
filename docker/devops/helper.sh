@@ -70,7 +70,10 @@ function build-maploom {
       rm /code/exchange/maploom/templates/maps/maploom.html
     fi
     cp bin/maploom.html /code/exchange/maploom/templates/maps/maploom.html
-    rm -fr /code/exchange/maploom/static/maploom/{assets,fonts}
+    if [[ -d /code/exchange/maploom/static/maploom ]]; then
+      rm -r /code/exchange/maploom/static/maploom
+    fi
+    mkdir /code/exchange/maploom/static/maploom
     cp -r bin/assets /code/exchange/maploom/static/maploom/assets
     cp -r bin/fonts /code/exchange/maploom/static/maploom/fonts
     rm -f package-lock.json
