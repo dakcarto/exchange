@@ -102,11 +102,12 @@ def get_facet_settings():
     return facet_settings
 
 
-def get_base_query(request):
-    # Build base query
-    # The base query only includes filters relevant to what the user
-    # is allowed to see and the overall types of documents to search.
-    # This provides the overall counts and all fields for faceting
+def get_base_query(search):
+    '''
+    Build base query
+    The base query only includes the overall types of documents to search.
+    This provides the overall counts and all fields for faceting
+    '''
 
     # only show documents, layers, stories, and maps
     q = Q({"match": {"type": "layer"}}) | Q(
@@ -114,21 +115,31 @@ def get_base_query(request):
         {"match": {"type": "document"}}) | Q(
         {"match": {"type": "map"}})
 
-    # Filter geonode layers by permissions
+    return search.query(q)
+
+
+def apply_base_filter(request, search):
+    '''
+    Filter results based on which objects geonode allows access to.
+    '''
+
     if not settings.SKIP_PERMS_FILTER:
         # Get the list of objects the user has access to
         filter_set = get_objects_for_user(
-            request.user, 'base.view_resourcebase')
-        if settings.RESOURCE_PUBLISHING:
-            filter_set = filter_set.filter(is_published=True)
+            request.user,
+            'base.view_resourcebase'
+        )
+
+        # Various resources do not have is_published,
+        # which end up affecting results
+        # if settings.RESOURCE_PUBLISHING:
+        # filter_set = filter_set.filter(is_published=True)
 
         filter_set_ids = map(str, filter_set.values_list('id', flat=True))
-        # Do the query using the filterset and the query term. Facet the
-        # results
         if len(filter_set_ids) > 0:
-            q = Q({"terms": {"id": filter_set_ids}}) | q
+            search = search.filter(Q('terms', id=filter_set_ids))
 
-        return q
+        return search
 
 
 def get_facet_fields():
@@ -439,7 +450,8 @@ def elastic_search(request, resourcetype='base'):
     [indices.remove(i) for i in exclude_indexes if i in indices]
 
     search = elasticsearch_dsl.Search(using=es, index=indices)
-    search = search.query(get_base_query(request))
+    search = get_base_query(search)
+    search = apply_base_filter(request, search)
 
     # Add facets to search
     for fn in get_facet_fields():
