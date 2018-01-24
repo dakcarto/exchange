@@ -50,13 +50,21 @@ def get_gs_thumbnail(instance):
 
     if (instance.storeType == 'remoteStore'):
         params['request'] = 'getMap'
+        params['service'] = 'wms'
         params['version'] = '1.3.0'
         params['bbox'] = '%s,%s,%s,%s' % (
             instance.bbox_x0,
             instance.bbox_y0,
             instance.bbox_x1,
-            instance.bbox_y1)
+            instance.bbox_y1
+        )
+
         baseurl = instance.ows_url + '?'
+        del params['TIME']
+
+        if all(s in baseurl.lower() for s in ['mapserver', 'wmsserver']):
+            params['styles'] = ''
+            params['crs'] = 'epsg:4326'
 
     # Avoid using urllib.urlencode here because it breaks the url.
     # commas and slashes in values get encoded and then cause trouble
@@ -70,13 +78,16 @@ def get_gs_thumbnail(instance):
             thumbnail_create_url = "%s/info/thumbnail" % (instance.ows_url)
 
     tries = 0
-    max_tries = 30
+    max_tries = 15
     while tries < max_tries:
         logger.debug(
             'Thumbnail: Requesting thumbnail from GeoServer. '
             'Attempt %d of %d for %s',
             tries + 1, max_tries, thumbnail_create_url)
         if (instance.storeType == 'remoteStore'):
+            if tries > 4:
+                thumbnail_create_url = thumbnail_create_url.replace(
+                    'image/png8', 'image/jpeg')
             resp, image = http_client.request(thumbnail_create_url)
         else:
             # Login using basic auth as geoserver admin
