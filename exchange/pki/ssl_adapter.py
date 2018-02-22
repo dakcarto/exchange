@@ -28,7 +28,8 @@ import logging
 
 from ssl import Purpose, SSLError
 from requests.adapters import HTTPAdapter
-from requests import Session, RequestException
+from requests import session, RequestException, Request
+from requests.exceptions import InvalidSchema
 from urllib3.util.ssl_ import (create_urllib3_context,
                                resolve_ssl_version,
                                resolve_cert_reqs)
@@ -42,6 +43,27 @@ from .models import HostnamePortSslConfig, SslConfig
 
 
 logger = logging.getLogger(__name__)
+
+# global, so base_url -> adapter registrations are cached across calls
+https_client = session()
+""":type: requests.Session"""
+# Clear default, fallback 'https://' adapter;
+# all https adapters in our session MUST be unique to a fqdn[:port]
+# TODO: Consider adding SslContextAdapter(<default_ssl_config>) for 'https://'
+try:
+    __https_adapter = https_client.get_adapter('https://')
+    __https_adapter.close()  # clean up session pool manager
+    del https_client.adapters['https://']
+except InvalidSchema:
+    pass
+
+
+def clear_https_adapters():
+    """Clears just the https:// prefixed cached adapters"""
+    for adptr in https_client.adapters:
+        if adptr.startswith('https://'):
+            https_client.adapters[adptr].close()
+            del https_client.adapters[adptr]
 
 
 class SslContextAdapter(HTTPAdapter):
@@ -305,6 +327,19 @@ def get_ssl_context_opts(url):
 
 def https_request(url, data=None, method='GET', headers=None,
                   access_token=None):
+    """
+
+    :param url:
+    :type url: basestring
+    :param data:
+    :param method:
+    :param headers:
+    :param access_token:
+    :return:
+    """
+    if not url.lower().startswith('https'):
+        raise ValueError('URL does not start with https')
+
     if headers is None:
         headers = {}
 
@@ -316,18 +351,24 @@ def https_request(url, data=None, method='GET', headers=None,
     #   https://tools.ietf.org/html/rfc6125 <-- best practices
     # normalize_hostname() handles this bug
     base_url = requests_base_url(normalize_hostname(url))
-    http_client = Session()  # type: requests.Session
-    http_client.mount(base_url,
-                      SslContextAdapter(*get_ssl_context_opts(base_url)))
 
-    req_method = getattr(http_client, method.lower())
+    try:
+        adapter = https_client.get_adapter(base_url)
+        # logger.debug('Using session adapter for {0}'.format(base_url))
+    except InvalidSchema:
+        https_client.mount(base_url,
+                           SslContextAdapter(*get_ssl_context_opts(base_url)))
+        logger.debug('Session adapter add {0}'.format(base_url))
+        adapter = https_client.get_adapter(base_url)
+
+    # req_method = getattr(https_client, method.lower())
 
     if access_token:
         headers['Authorization'] = "Bearer {}".format(access_token)
         parsed_url = urlparse(url)
         params = parse_qsl(parsed_url.query.strip())
         # Don't add access token to params; prefer header fields
-        # TODO: Should we add a call param option to enable/disable?
+        # TODO: Should we add a call param option to enable/disable param?
         # params.append(('access_token', access_token))
         params = urlencode(params)
         url = "{proto}://{address}{path}?{params}"\
@@ -338,11 +379,15 @@ def https_request(url, data=None, method='GET', headers=None,
     #       in arcrest.web._base._chunk()
     headers['Accept-Encoding'] = ''
 
+    # Prepare request for adapter
+    r = Request(method.upper(), url, headers=headers, data=data)
+    req = r.prepare()
+
     resp = None
     # TODO: Do we need GeoFence stuff here, like in geonode/security/models.py?
     #       See: geonode.security.models.http_request() response handling
     try:
-        resp = req_method(url, headers=headers, data=data)
+        resp = adapter.send(req)
     except RequestException:
         logger.debug(traceback.format_exc())
 
