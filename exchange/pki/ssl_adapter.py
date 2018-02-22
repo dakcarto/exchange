@@ -91,12 +91,12 @@ class SslContextAdapter(HTTPAdapter):
         self._adptr_opts = adapter_options
 
         # set up adapter options
-        retries = self._adptr_opts.get('retries', None)
-        redirects = self._adptr_opts.get('redirects', None)
-        if retries is not None:  # needs int; redirects can be None
+        _retries = self._adptr_opts.get('retries', None)
+        _redirects = self._adptr_opts.get('redirects', None)
+        if _retries is not None:  # needs int; redirects can be None
             kwargs['max_retries'] = Retry(
-                total=retries,
-                redirect=redirects,
+                total=_retries,
+                redirect=_redirects,
                 backoff_factor=0.9,
                 status_forcelist=[502, 503, 504],
                 method_whitelist={'HEAD', 'TRACE', 'GET', 'PUT',
@@ -106,7 +106,7 @@ class SslContextAdapter(HTTPAdapter):
         super(SslContextAdapter, self).__init__(*args, **kwargs)
 
     @staticmethod
-    def normalize_hostname(url):
+    def _normalize_hostname(url):
         """
         Replace url with same URL, but with lowercased hostname
         :param url: A URL
@@ -115,7 +115,10 @@ class SslContextAdapter(HTTPAdapter):
         parts = urlparse(url)
         return re.sub(parts.hostname, parts.hostname, url, count=1, flags=re.I)
 
-    def update_context(self, context):
+    def context_options(self):
+        return self._ctx_create_opts, self._ctx_opts, self._adptr_opts
+
+    def _update_context(self, context):
         """
         :type context: ssl.SSLContext
         """
@@ -165,78 +168,38 @@ class SslContextAdapter(HTTPAdapter):
 
     def init_poolmanager(self, *args, **kwargs):
         context = create_urllib3_context(**self._ctx_create_opts)
-        self.update_context(context)
+        self._update_context(context)
         kwargs['ssl_context'] = context
         return super(SslContextAdapter, self).init_poolmanager(*args,
                                                                **kwargs)
 
     def proxy_manager_for(self, *args, **kwargs):
         context = create_urllib3_context(**self._ctx_create_opts)
-        self.update_context(context)
+        self._update_context(context)
         kwargs['ssl_context'] = context
         return super(SslContextAdapter, self).proxy_manager_for(*args,
                                                                 **kwargs)
 
     # **kwargs doesn't work here; requests' send() calls 'proxies' positionally
     def get_connection(self, url, proxies=None):
-        url = self.normalize_hostname(url)
+        url = self._normalize_hostname(url)
         return super(SslContextAdapter, self).get_connection(url,
                                                              proxies=proxies)
 
     def request_url(self, request, proxies):
-        request.url = self.normalize_hostname(request.url)
+        request.url = self._normalize_hostname(request.url)
         return super(SslContextAdapter, self).request_url(request, proxies)
 
     def send(self, request, **kwargs):
-        request.url = self.normalize_hostname(request.url)
+        request.url = self._normalize_hostname(request.url)
         return super(SslContextAdapter, self).send(request, **kwargs)
 
 
-def get_ssl_context_opts(url):
-    """
-    :param url: URL or base URL, e.g. https://mydomain:8000
-    :type url: basestring
-    :return: tuple of dicts that matches input for SslContextAdapter
-    """
-
-    ssl_default_config = SslConfig.objects.get_create_default()
-    ssl_config = ssl_default_config.to_ssl_config()
-    """:type: dict"""
-
-    host_port = hostname_port(url)  # MUST to be lowercase
-
-    try:
-        host_port_map = HostnamePortSslConfig.objects.get(
-            hostname_port=host_port)
-        logger.debug("Found Hostname:Port record get for: {0}"
-                     .format(host_port))
-        config = host_port_map.ssl_config
-
-        if config and isinstance(config, SslConfig):
-            logger.debug("Found SslConfig related record: {0}"
-                         .format(ssl_config))
-            ssl_config = config.to_ssl_config()
-        else:
-            logger.debug("Missing SslConfig related record, "
-                         "reverting to default")
-            host_port_map.ssl_config = ssl_default_config
-            host_port_map.save()
-    except HostnamePortSslConfig.DoesNotExist:
-        logger.debug("Hostname:Port record not found for: {0}"
-                     .format(host_port))
-        logger.debug("Hostname:Port objects:\n{0}"
-                     .format(HostnamePortSslConfig.objects.all()))
-        # TODO: Log for admin; communicate to user?
-        # TODO: Should routed URL be rewritten back to original URL,
-        #       i.e. no /pki path prefix?
-        #       If logic flow gets here, record should exist. Maybe have a
-        #       Default exposed in widget and revert to it?
-        pass
-    except HostnamePortSslConfig.MultipleObjectsReturned:
-        # Shouldn't happen...
-        pass
-
-    # print(ssl_config)
+def ssl_config_to_context_opts(config):
+    if isinstance(config, SslConfig):
+        ssl_config = config.to_ssl_config()
+    else:
+        ssl_config = config
 
     if not isinstance(ssl_config, dict):
         raise TypeError("SSL config not defined as dictionary")
@@ -292,7 +255,55 @@ def get_ssl_context_opts(url):
     return ctx_c_opts, ctx_opts, adptr_opts
 
 
-def https_request(url, data=None, method='get', headers=None,
+def get_ssl_context_opts(url):
+    """
+    :param url: URL or base URL, e.g. https://mydomain:8000
+    :type url: basestring
+    :return: tuple of dicts that matches input for SslContextAdapter
+    """
+
+    ssl_default_config = SslConfig.objects.get_create_default()
+    ssl_config = ssl_default_config
+    """:type: dict"""
+
+    host_port = hostname_port(url)  # MUST to be lowercase
+
+    try:
+        host_port_map = HostnamePortSslConfig.objects.get(
+            hostname_port=host_port)
+        logger.debug("Found Hostname:Port record get for: {0}"
+                     .format(host_port))
+        config = host_port_map.ssl_config
+
+        if config and isinstance(config, SslConfig):
+            logger.debug("Found SslConfig related record: {0}"
+                         .format(config.to_ssl_config()
+                                 .get('name', '(name missing)')))
+            ssl_config = config
+        else:
+            logger.debug("Missing SslConfig related record, "
+                         "reverting to default")
+            host_port_map.ssl_config = ssl_default_config
+            host_port_map.save()
+    except HostnamePortSslConfig.DoesNotExist:
+        logger.debug("Hostname:Port record not found for: {0}"
+                     .format(host_port))
+        logger.debug("Hostname:Port objects:\n{0}"
+                     .format(HostnamePortSslConfig.objects.all()))
+        # TODO: Log for admin; communicate to user?
+        # TODO: Should routed URL be rewritten back to original URL,
+        #       i.e. no /pki path prefix?
+        #       If logic flow gets here, record should exist. Maybe have a
+        #       Default exposed in widget and revert to it?
+        pass
+    except HostnamePortSslConfig.MultipleObjectsReturned:
+        # Shouldn't happen...
+        pass
+
+    return ssl_config_to_context_opts(ssl_config)
+
+
+def https_request(url, data=None, method='GET', headers=None,
                   access_token=None):
     if headers is None:
         headers = {}
