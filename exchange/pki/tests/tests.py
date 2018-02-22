@@ -37,9 +37,15 @@ TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 if __name__ != '__main__':
     from ..models import SslConfig, HostnamePortSslConfig
-    from ..utils import hostname_port
+    from ..utils import hostname_port, requests_base_url
     from ..crypto import Crypto
-    from ..ssl_adapter import https_request
+    from ..ssl_adapter import (
+        https_client,
+        https_request,
+        clear_https_adapters,
+        ssl_config_to_context_opts,
+        SslContextAdapter
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +58,86 @@ def skip_unless_has_mapproxy():
     except (ConnectionError, AssertionError):
         return unittest.skip(
             'Test requires mapproxy docker-compose container running')
+
+
+class TestSslConfig(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # This needs to be mixed case, to ensure SslContextAdapter handles
+        # server cert matching always via lowercase hostname (bug in urllib3)
+        cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
+
+        # Already know what the lookup table key should be like
+        cls.mp_host_port = hostname_port(cls.mp_root)
+
+        cls.mp_txt = 'Welcome to MapProxy'
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        testheader = '\n\n#####_____ {0} _____#####' \
+            .format(str(self).replace('pki.tests.tests.', ''))
+        logger.debug(testheader)
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testHostnamePortSslConfigSignals(self):
+        clear_https_adapters()
+        HostnamePortSslConfig.objects.all().delete()
+
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
+        self.assertEqual(len(https_client.adapters), 1)  # for http://
+
+        ssl_config_1 = SslConfig.objects.get(pk=1)
+
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            self.mp_root, ssl_config_1)
+
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        self.assertEqual(len(https_client.adapters), 2)
+
+        adptr_1 = https_client.adapters[requests_base_url(self.mp_root)]
+        """:type: SslContextAdapter"""
+
+        self.assertIsInstance(adptr_1, SslContextAdapter)
+
+        self.assertEqual(ssl_config_to_context_opts(
+            ssl_config_1), adptr_1.context_options())
+
+        # Update ssl_config
+        ssl_config_2 = SslConfig.objects.get(pk=2)
+
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            self.mp_root, ssl_config_2)
+
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        self.assertEqual(len(https_client.adapters), 2)
+
+        adptr_2 = https_client.adapters[requests_base_url(self.mp_root)]
+        """:type: SslContextAdapter"""
+
+        self.assertIsInstance(adptr_2, SslContextAdapter)
+
+        self.assertEqual(ssl_config_to_context_opts(
+            ssl_config_2), adptr_2.context_options())
+
+        # Delete first, unreferenced config
+        SslConfig.objects.get(pk=1).delete()
+        # nothing should have changed
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        self.assertEqual(len(https_client.adapters), 2)
+
+        # Delete second, referenced config
+        SslConfig.objects.get(pk=2).delete()
+        # Should automatically remove mapping (related record) and
+        # adapter (via signal)
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
+        self.assertEqual(len(https_client.adapters), 1)
 
 
 @skip_unless_has_mapproxy()
@@ -73,20 +159,25 @@ class TestPkiRequest(TestCase):
         pass
 
     def setUp(self):
-        HostnamePortSslConfig.objects.all().delete()
+        # HostnamePortSslConfig.objects.all().delete()
+        testheader = '\n\n#####_____ {0} _____#####'\
+            .format(str(self).replace('pki.tests.tests.', ''))
+        logger.debug(testheader)
+        pass
 
     def tearDown(self):
-        HostnamePortSslConfig.objects.all().delete()
+        # HostnamePortSslConfig.objects.all().delete()
+        pass
 
-    def _set_hostname_port_mapping(self, pk):
-        logger.debug("Attempt Hostname:Port record creation for pk: {0}"
+    def _set_hostname_port_mapping(self, pk, url=None):
+        if url is None:
+            url = self.mp_root
+        logger.debug("Attempt Hostname:Port mapping for SslConfig pk: {0}"
                      .format(pk))
         ssl_config = SslConfig.objects.get(pk=pk)
-        host_port_map = HostnamePortSslConfig(
-            hostname_port=self.mp_host_port,
-            ssl_config=ssl_config)
-        host_port_map.save()
-        logger.debug("Hostname:Port objects now:\n{0}"
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            url, ssl_config)
+        logger.debug("Hostname:Port mappings:\n{0}"
                      .format(HostnamePortSslConfig.objects.all()))
 
     def test_crypto(self):
@@ -189,9 +280,13 @@ if __name__ == '__main__':
     # These imports need to come after loading settings, since settings is
     # imported in crypto.Crypto class, for SECRET_KEY use
     from pki.models import SslConfig, HostnamePortSslConfig  # noqa
-    from pki.utils import hostname_port  # noqa
+    from pki.utils import hostname_port, requests_base_url  # noqa
     from pki.crypto import Crypto  # noqa
+    from pki.ssl_adapter import https_client  # noqa
     from pki.ssl_adapter import https_request  # noqa
+    from pki.ssl_adapter import clear_https_adapters  # noqa
+    from pki.ssl_adapter import ssl_config_to_context_opts  # noqa
+    from pki.ssl_adapter import SslContextAdapter  # noqa
 
     TestRunner = get_runner(settings)
     """:type: django.test.runner.DiscoverRunner"""

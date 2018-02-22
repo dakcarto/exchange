@@ -26,8 +26,16 @@ class PkiAppConfig(AppConfig):
     label = 'pki'
     verbose_name = 'SSL/PKI'
 
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        from . import signals  # noqa
+
 
 class PkiTestAppConfig(AppConfig):
     name = 'pki'
     label = 'pki'
     verbose_name = 'SSL/PKI'
+
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        from . import signals  # noqa
